@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kumple: Łap co Twoje</title>
+<style>
+  :root { --bg:#1b1d2a; --panel:#262a3d; --text:#f3f3f7; --accent:#ffcc33; --bad:#ff5c5c; --good:#5cff8a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,Segoe UI,sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
+  h1 { margin:16px 0 4px; font-size:28px; }
+  .sub { opacity:.7; margin-bottom:12px; text-align:center; padding:0 16px; }
+  #menu, #end { display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; max-width:900px; width:100%; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; width:100%; }
+  .card { background:var(--panel); border:2px solid transparent; border-radius:14px; padding:14px; cursor:pointer; transition:transform .1s,border-color .1s; }
+  .card:hover { transform:translateY(-3px); border-color:var(--accent); }
+  .card .face { font-size:42px; }
+  .card h3 { margin:6px 0 4px; }
+  .card p { margin:0; font-size:14px; opacity:.8; }
+  .card .items { margin-top:8px; font-size:14px; }
+  #game { display:none; position:relative; align-items:center; padding:8px; width:100%; }
+  canvas { background:#87b8e8; border-radius:14px; display:block; touch-action:none; user-select:none; -webkit-user-select:none; }
+  #hud { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:4px 2px 8px; font-size:18px; font-weight:600; }
+  #end { display:none; text-align:center; }
+  #end .big { font-size:64px; }
+  #end h2 { margin:0; color:var(--accent); }
+  button { background:var(--accent); color:#222; border:0; border-radius:10px; padding:12px 22px; font-size:17px; font-weight:700; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--text); border:2px solid var(--text); }
+  .hint { font-size:13px; opacity:.6; }
+  #mute { position:fixed; top:10px; right:10px; padding:8px 12px; font-size:20px; background:var(--panel); color:var(--text); z-index:10; }
+  .board { background:var(--panel); border-radius:14px; padding:12px 16px; width:100%; max-width:460px; }
+  .board h3 { margin:0 0 8px; text-align:center; }
+  .board ol { margin:0; padding-left:28px; }
+  .board li { padding:4px 0; display:flex; justify-content:space-between; gap:8px; }
+  .board li.me { color:var(--accent); font-weight:700; }
+  .board .empty { text-align:center; opacity:.6; font-size:14px; }
+  .save { display:flex; gap:8px; width:100%; max-width:460px; }
+  .save input { flex:1; min-width:0; padding:12px; border-radius:10px; border:2px solid var(--panel); background:#11131c; color:var(--text); font-size:16px; }
+  body.playing h1, body.playing .sub { display:none; }
+  @media (max-width:600px) {
+    h1 { font-size:22px; margin-top:12px; }
+    #hud { font-size:15px; }
+    .grid { grid-template-columns:1fr 1fr; gap:8px; }
+    .card { padding:10px; }
+    .card .face { font-size:32px; }
+    .card p, .card .items { font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<button id="mute" title="Dźwięk">🔊</button>
+<h1>🍻 Kumple: Łap co Twoje</h1>
+<div class="sub">Wybierz kumpla, łap dobre rzeczy, unikaj złych. 3 życia, 45 sekund.</div>
+
+<div id="menu">
+  <div class="grid" id="cards"></div>
+  <div class="hint">Sterowanie: strzałki / A-D / myszka / przeciągnij palcem</div>
+  <div class="board" id="menuBoard"></div>
+</div>
+
+<div id="game">
+  <div id="hud"><span id="hName"></span><span id="hScore"></span><span id="hTime"></span><span id="hLives"></span></div>
+  <canvas id="c" width="600" height="600"></canvas>
+</div>
+
+<div id="end">
+  <div class="big" id="eFace"></div>
+  <h2 id="eTitle"></h2>
+  <div id="eScore" style="font-size:20px"></div>
+  <div id="eText" style="max-width:500px;opacity:.85"></div>
+  <form class="save" id="saveForm">
+    <input id="playerName" maxlength="16" placeholder="Twoje imię" autocomplete="off">
+    <button type="submit">Zapisz</button>
+  </form>
+  <div style="display:flex;gap:10px">
+    <button id="again">Jeszcze raz</button>
+    <button class="ghost" id="back">Zmień kumpla</button>
+  </div>
+  <div class="board" id="endBoard"></div>
+</div>
+
+<script>
+const CHARS = [
+  {
+    id: "sw", name: "SW", face: "👷", desc: "Strabag do szpiku kości. Austria to nie kraj, to styl życia.",
+    sky: "#9fd3ff",
+    good: [["⛑️","Kask Strabag!"],["🇦🇹","Servus!"],["🏔️","Alpen!"],["🥨","Brezel!"]],
+    bad:  [["🐌","Budowa opóźniona"],["🇩🇪","To nie Austria!!"],["🛌","Urlop?! Nigdy"]],
+    quips: ["W Austrii by tak nie było", "Strabag buduje, SW nadzoruje", "Wiener Schnitzel > schabowy", "Grüß Gott, panowie"],
+    titles: ["Praktykant w Strabagu", "Brygadzista", "Honorowy Austriak", "Kanclerz Austrii"],
+  },
+  {
+    id: "piotrek", name: "Piotrek", face: "🏗️", desc: "Robi w Austrii, a dom stawia w Jabłonce. Logistyka level hard.",
+    sky: "#b5e3a1",
+    good: [["🧱","Cegła na dom!"],["💶","Wypłata z Austrii"],["🪵","Więźba!"],["🏠","Kolejne piętro"]],
+    bad:  [["🧾","Faktura od fachowca"],["🌧️","Leje w Jabłonce"],["🤷","Fachowiec nie przyszedł"]],
+    quips: ["Jeszcze tylko dach...", "Euro zarobione, złotówki wydane", "Jabłonka czeka!", "Fachowiec będzie w czwartek. Którym?"],
+    titles: ["Fundament wylany", "Stan surowy", "Dach jest!", "Parapetówa w Jabłonce"],
+  },
+  {
+    id: "marcin", name: "Marcin", face: "🧐", desc: "Brat Dominika i Pawła. Kontroler jakości kiełbas w Kabanosie. Odpowiedzialna robota.",
+    sky: "#ffd9a8",
+    good: [["🌭","Kabanos zatwierdzony"],["🥓","Boczek OK"],["🍖","Pierwsza klasa"]],
+    bad:  [["🦠","Sanepid!"],["🥦","Warzywo w kiełbasie?!"],["🧦","Skarpeta w masie"]],
+    quips: ["Trzeba spróbować... dla jakości", "Ten kabanos jest za mało kabanosowy", "Kontrola jakości to stan umysłu", "Jeszcze jeden. Dla pewności."],
+    titles: ["Stażysta od parówek", "Degustator", "Mistrz Kabanosa", "Kiełbasiany Bóg"],
+  },
+  {
+    id: "pawel", name: "Paweł", face: "🗣️", desc: "Zawsze gotów na debatę z Mateuszem. Argumenty ma naostrzone.",
+    sky: "#c9c3ff",
+    good: [["📜","Mocny argument"],["📊","Statystyka!"],["🦅","Orzeł!"],["🍖","Schabowy"]],
+    bad:  [["🥗","Tofu od Mateusza"],["🚲","Ścieżka rowerowa"],["📢","Mateusz krzyczy"]],
+    quips: ["Mateusz, posłuchaj...", "To jest kwestia faktów", "Ale skąd masz te dane?", "Wigilia znowu będzie gorąca"],
+    titles: ["Komentator z Facebooka", "Publicysta", "Ekspert w TV", "Pogromca Mateusza"],
+  },
+  {
+    id: "mateusz", name: "Mateusz", face: "✊", desc: "Lewak pełną gębą. Paweł mu nie odpuści, ale on Pawłowi też nie.",
+    sky: "#ffc2e0",
+    good: [["🚲","Rower > auto"],["🌱","Tofu!"],["📢","Manifestacja!"],["📚","Książka z lewej półki"]],
+    bad:  [["🚙","SUV"],["📜","Argument Pawła"],["🍖","Schabowy"]],
+    quips: ["Paweł, to jest systemowe", "Kapitalizm znowu...", "Sprawdź źródła, Paweł", "Rowerem było szybciej"],
+    titles: ["Aktywista z osiedla", "Organizator demo", "Poseł Lewicy", "Pogromca Pawła"],
+  },
+  {
+    id: "tomek", name: "Tomek", face: "🪓", desc: "Za dnia drwal, nocą szef fabryki w Slovensku. Kiedy on śpi? Nikt nie wie.",
+    sky: "#a7e39b", night: "#1d2347",
+    good: [["🪵","Drewno!"],["🌲","Drzewo padło"]],
+    bad:  [["🐻","Niedźwiedź"],["🐝","Osy w pniu"]],
+    goodNight: [["⚙️","Linia chodzi"],["📦","Paleta wysłana"],["💶","Kontrakt!"]],
+    badNight:  [["💤","Zasnął na zmianie"],["🔥","Awaria!"],["🍺","Slovenské pivo"]],
+    quips: ["Dobrý deň!", "Spanie jest dla słabych", "Rano siekiera, wieczorem Excel", "Nočná zmena!"],
+    titles: ["Pomocnik drwala", "Drwal z ambicjami", "Dyrektor fabryki", "Cesarz Slovenska"],
+  },
+  {
+    id: "dominik", name: "Dominik", face: "👨‍💻", desc: "Programista z Krakowa i twórca tej gry. Jeśli coś nie działa, to feature.",
+    sky: "#d6e4ff",
+    good: [["☕","Kawka!"],["✅","Testy przeszły"],["🐉","Smok Wawelski"],["🥯","Obwarzanek"]],
+    bad:  [["🐛","Bug na produkcji"],["🌫️","Smog w Krakowie"],["📅","Spotkanie, które mogło być mailem"]],
+    quips: ["U mnie działa", "To nie bug, to feature", "Kto pushował na maina?!", "Zrobię to w weekend"],
+    titles: ["Junior od CSS-a", "Mid z ambicjami", "Senior Kraków Dev", "Twórca Wszechświata"],
+  },
+];
+
+const $ = id => document.getElementById(id);
+const cv = $("c"), ctx = cv.getContext("2d");
+const W = 600, GAME_TIME = 45;
+let H = 600;
+
+// ---------- Sound (Web Audio, no files) ----------
+let audio = null;
+let muted = false;
+try { muted = localStorage.getItem("kumple_muted") === "1"; } catch {}
+$("mute").textContent = muted ? "🔇" : "🔊";
+$("mute").onclick = () => {
+  muted = !muted;
+  $("mute").textContent = muted ? "🔇" : "🔊";
+  try { localStorage.setItem("kumple_muted", muted ? "1" : "0"); } catch {}
+};
+
+function tone(freq, dur, { type = "square", vol = 0.12, slide = 0, delay = 0 } = {}) {
+  if (muted) return;
+  if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (audio.state === "suspended") audio.resume();
+  const t = audio.currentTime + delay;
+  const osc = audio.createOscillator(), gain = audio.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.connect(gain).connect(audio.destination);
+  osc.start(t); osc.stop(t + dur);
+}
+
+const sfx = {
+  start: () => [523, 659, 784].forEach((f, i) => tone(f, 0.12, { delay: i * 0.09 })),
+  catch: () => tone(700 + Math.random() * 300, 0.1, { slide: 400, vol: 0.08 }),
+  hit:   () => { tone(180, 0.35, { type: "sawtooth", slide: -120, vol: 0.18 }); tone(90, 0.3, { type: "square", vol: 0.1 }); },
+  night: () => [392, 330, 262, 196].forEach((f, i) => tone(f, 0.25, { type: "triangle", delay: i * 0.15, vol: 0.15 })),
+  quip:  () => tone(1200, 0.05, { type: "sine", vol: 0.05 }),
+  win:   () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, { delay: i * 0.12, type: "triangle", vol: 0.15 })),
+  lose:  () => [392, 349, 311, 262].forEach((f, i) => tone(f, 0.3, { delay: i * 0.2, type: "sawtooth", vol: 0.1 })),
+};
+
+// ---------- Leaderboard (localStorage) ----------
+const LB_KEY = "kumple_leaderboard";
+function loadBoard() {
+  try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch { return []; }
+}
+function saveBoard(list) {
+  try { localStorage.setItem(LB_KEY, JSON.stringify(list)); } catch {}
+}
+function renderBoard(el, highlightId) {
+  const list = loadBoard();
+  const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  el.innerHTML = "<h3>🏆 Tabela wyników</h3>" + (list.length
+    ? "<ol>" + list.map(r => {
+        const c = CHARS.find(x => x.id === r.char);
+        return `<li class="${r.id === highlightId ? "me" : ""}"><span>${esc(r.name)} ${c ? c.face : ""}</span><span>${r.score} pkt</span></li>`;
+      }).join("") + "</ol>"
+    : '<div class="empty">Pusto. Zagraj i bądź pierwszy!</div>');
+}
+renderBoard($("menuBoard"));
+
+// ---------- Responsive canvas ----------
+function fitCanvas() {
+  const hudH = $("hud").offsetHeight || 40;
+  const availW = Math.min(window.innerWidth - 16, 600);
+  const availH = window.innerHeight - hudH - 24;
+  // Logical width is fixed (600); height follows screen aspect so phones get a taller board
+  H = Math.round(Math.max(500, Math.min(1100, W * availH / availW)));
+  cv.width = W; cv.height = H;
+  let cssW = availW, cssH = cssW * H / W;
+  if (cssH > availH) { cssH = availH; cssW = cssH * W / H; }
+  cv.style.width = cssW + "px";
+  cv.style.height = cssH + "px";
+  $("hud").style.width = cssW + "px";
+  if (player) player.y = H - 60;
+}
+addEventListener("resize", () => { if (running) fitCanvas(); });
+
+let ch, player, items, popups, score, lives, timeLeft, spawnT, last, running, keys = {}, quipT, quip, shake = 0;
+
+// Build menu cards
+for (const c of CHARS) {
+  const el = document.createElement("div");
+  el.className = "card";
+  const goods = (c.good.concat(c.goodNight || [])).map(g => g[0]).join(" ");
+  const bads = (c.bad.concat(c.badNight || [])).map(b => b[0]).join(" ");
+  el.innerHTML = `<div class="face">${c.face}</div><h3>${c.name}</h3><p>${c.desc}</p>
+    <div class="items">✅ ${goods}<br>❌ ${bads}</div>`;
+  el.onclick = () => start(c);
+  $("cards").appendChild(el);
+}
+
+function show(id) {
+  for (const s of ["menu", "game", "end"]) $(s).style.display = s === id ? "flex" : "none";
+  if (id === "game") $("game").style.flexDirection = "column";
+  document.body.classList.toggle("playing", id === "game");
+  if (id === "menu") renderBoard($("menuBoard"));
+  scrollTo(0, 0);
+}
+
+function start(c) {
+  ch = c;
+  items = []; popups = [];
+  score = 0; lives = 3; timeLeft = GAME_TIME; spawnT = 0; quipT = 3; quip = null; shake = 0;
+  $("hName").textContent = `${c.face} ${c.name}`;
+  show("game");
+  player = { x: W / 2, y: 0, w: 70, speed: 420 };
+  fitCanvas();
+  running = true; last = performance.now();
+  sfx.start();
+  requestAnimationFrame(loop);
+}
+
+const isNight = () => ch.night && timeLeft < GAME_TIME / 2;
+
+function spawn() {
+  const night = isNight();
+  const goodPool = night ? ch.goodNight : ch.good;
+  const badPool = night ? ch.badNight : ch.bad;
+  const difficulty = 1 - timeLeft / GAME_TIME; // 0 -> 1
+  const isBad = Math.random() < 0.3 + difficulty * 0.2;
+  const pool = isBad ? badPool : goodPool;
+  const [emoji, label] = pool[Math.floor(Math.random() * pool.length)];
+  items.push({
+    x: 30 + Math.random() * (W - 60), y: -30,
+    vy: 150 + Math.random() * 80 + difficulty * 220,
+    emoji, label, bad: isBad, rot: Math.random() * 6, vr: (Math.random() - .5) * 4,
+  });
+}
+
+function addPopup(text, x, y, color) {
+  popups.push({ text, x, y, color, t: 1 });
+}
+
+function loop(now) {
+  if (!running) return;
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function update(dt) {
+  const wasNight = isNight();
+  timeLeft -= dt;
+  if (!wasNight && isNight()) { addPopup("🌙 NOCNA ZMIANA W SLOVENSKU!", W / 2, H / 2, "#ffcc33"); sfx.night(); }
+
+  if (keys.left) player.x -= player.speed * dt;
+  if (keys.right) player.x += player.speed * dt;
+  player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, player.x));
+
+  spawnT -= dt;
+  if (spawnT <= 0) {
+    spawn();
+    spawnT = Math.max(0.3, 0.8 - (1 - timeLeft / GAME_TIME) * 0.5);
+  }
+
+  for (const it of items) {
+    it.y += it.vy * dt;
+    it.rot += it.vr * dt;
+    if (!it.dead && it.y > player.y - 30 && it.y < player.y + 20 && Math.abs(it.x - player.x) < player.w / 2 + 15) {
+      it.dead = true;
+      if (it.bad) {
+        lives--;
+        addPopup(`${it.label} 💥`, it.x, it.y, "#ff5c5c");
+        shake = 0.3;
+        sfx.hit();
+        if (navigator.vibrate) navigator.vibrate(120);
+      } else {
+        score += 10;
+        addPopup(`+10 ${it.label}`, it.x, it.y, "#2a8f45");
+        sfx.catch();
+      }
+    }
+  }
+  items = items.filter(it => !it.dead && it.y < H + 40);
+
+  for (const p of popups) { p.t -= dt * 0.8; p.y -= 40 * dt; }
+  popups = popups.filter(p => p.t > 0);
+
+  quipT -= dt;
+  if (quipT <= 0) {
+    quip = { text: ch.quips[Math.floor(Math.random() * ch.quips.length)], t: 2.5 };
+    quipT = 5 + Math.random() * 3;
+    sfx.quip();
+  }
+  if (quip) { quip.t -= dt; if (quip.t <= 0) quip = null; }
+  if (shake > 0) shake -= dt;
+
+  $("hScore").textContent = `Punkty: ${score}`;
+  $("hTime").textContent = `⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
+  $("hLives").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(3 - Math.max(0, lives));
+
+  if (lives <= 0 || timeLeft <= 0) end(lives <= 0);
+}
+
+function draw() {
+  ctx.save();
+  if (shake > 0) ctx.translate((Math.random() - .5) * 12, (Math.random() - .5) * 12);
+  ctx.fillStyle = isNight() ? ch.night : ch.sky;
+  ctx.fillRect(-10, -10, W + 20, H + 20);
+  if (isNight()) { ctx.font = "40px serif"; ctx.fillText("🌙", W - 70, 60); }
+
+  // ground
+  ctx.fillStyle = isNight() ? "#2c3a2c" : "#6b9b4a";
+  ctx.fillRect(-10, H - 20, W + 20, 30);
+
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const it of items) {
+    ctx.save();
+    ctx.translate(it.x, it.y); ctx.rotate(it.rot * 0.3);
+    ctx.font = "38px serif";
+    ctx.fillText(it.emoji, 0, 0);
+    ctx.restore();
+  }
+
+  // player
+  ctx.font = "56px serif";
+  ctx.fillText(ch.face, player.x, player.y);
+  ctx.font = "bold 14px system-ui";
+  ctx.fillStyle = isNight() ? "#fff" : "#222";
+  ctx.fillText(ch.name, player.x, player.y + 34);
+
+  // speech bubble
+  if (quip) {
+    ctx.font = "16px system-ui";
+    const tw = ctx.measureText(quip.text).width + 20;
+    const bx = Math.max(tw / 2 + 5, Math.min(W - tw / 2 - 5, player.x));
+    ctx.fillStyle = "#fff";
+    roundRect(bx - tw / 2, player.y - 85, tw, 30, 10);
+    ctx.fillStyle = "#222";
+    ctx.fillText(quip.text, bx, player.y - 70);
+  }
+
+  for (const p of popups) {
+    ctx.globalAlpha = Math.max(0, p.t);
+    ctx.font = "bold 20px system-ui";
+    ctx.lineWidth = 4; ctx.strokeStyle = "#fff";
+    ctx.strokeText(p.text, Math.max(100, Math.min(W - 100, p.x)), p.y);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, Math.max(100, Math.min(W - 100, p.x)), p.y);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.fill();
+}
+
+function end(died) {
+  running = false;
+  const rank = score < 100 ? 0 : score < 250 ? 1 : score < 400 ? 2 : 3;
+  $("eFace").textContent = ch.face;
+  $("eTitle").textContent = ch.titles[rank];
+  $("eScore").textContent = `Wynik: ${score} pkt`;
+  const deathLines = {
+    sw: "Za dużo przerw. W Austrii by Cię zwolnili.",
+    piotrek: "Fachowiec zniknął z zaliczką. Dom w Jabłonce poczeka.",
+    marcin: "Sanepid zamknął Kabanos. Bracia się śmieją.",
+    pawel: "Mateusz wygrał tę dyskusję. Do następnych świąt.",
+    mateusz: "Paweł wygrał tę dyskusję. Do następnych świąt.",
+    tomek: "Organizm w końcu upomniał się o sen.",
+    dominik: "Produkcja leży. Piątek, 16:58. Klasyk.",
+  };
+  $("eText").textContent = died ? deathLines[ch.id] : "Przetrwałeś cały dzień. Szacun.";
+  died ? sfx.lose() : sfx.win();
+  lastResult = { char: ch.id, score, saved: false };
+  $("saveForm").style.display = score > 0 ? "flex" : "none";
+  try { $("playerName").value = localStorage.getItem("kumple_name") || ""; } catch {}
+  renderBoard($("endBoard"));
+  show("end");
+}
+
+let lastResult = null;
+$("saveForm").onsubmit = e => {
+  e.preventDefault();
+  if (!lastResult || lastResult.saved) return;
+  const name = $("playerName").value.trim() || "Anonim";
+  try { localStorage.setItem("kumple_name", name); } catch {}
+  const id = Date.now() + "" + Math.random();
+  const list = loadBoard();
+  list.push({ id, name, char: lastResult.char, score: lastResult.score });
+  list.sort((a, b) => b.score - a.score);
+  saveBoard(list.slice(0, 10));
+  lastResult.saved = true;
+  $("saveForm").style.display = "none";
+  renderBoard($("endBoard"), id);
+  sfx.catch();
+};
+
+$("again").onclick = () => start(ch);
+$("back").onclick = () => show("menu");
+
+// Controls
+addEventListener("keydown", e => {
+  if (["ArrowLeft", "a", "A"].includes(e.key)) keys.left = true;
+  if (["ArrowRight", "d", "D"].includes(e.key)) keys.right = true;
+});
+addEventListener("keyup", e => {
+  if (["ArrowLeft", "a", "A"].includes(e.key)) keys.left = false;
+  if (["ArrowRight", "d", "D"].includes(e.key)) keys.right = false;
+});
+function pointerMove(clientX) {
+  const r = cv.getBoundingClientRect();
+  player.x = (clientX - r.left) * (W / r.width);
+}
+cv.addEventListener("mousemove", e => running && pointerMove(e.clientX));
+// Touch anywhere on the game screen (not just the canvas) moves the player
+const onTouch = e => { if (running) { pointerMove(e.touches[0].clientX); e.preventDefault(); } };
+$("game").addEventListener("touchstart", onTouch, { passive: false });
+$("game").addEventListener("touchmove", onTouch, { passive: false });
+</script>
+</body>
+</html>
