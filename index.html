@@ -21,6 +21,9 @@
   .card h3 { margin:6px 0 4px; }
   .card p { margin:0; font-size:14px; opacity:.8; }
   .card .items { margin-top:8px; font-size:14px; }
+  .card.locked { cursor:default; opacity:.55; border:2px dashed #555a75; }
+  .card.locked:hover { transform:none; border-color:#555a75; }
+  #eUnlock { display:none; background:var(--accent); color:#222; font-weight:800; border-radius:12px; padding:10px 16px; }
   #game { display:none; position:relative; align-items:center; padding:8px; width:100%; }
   canvas { background:#87b8e8; border-radius:14px; display:block; touch-action:none; user-select:none; -webkit-user-select:none; }
   #hud { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:4px 2px 8px; font-size:18px; font-weight:600; white-space:nowrap; }
@@ -77,6 +80,7 @@
   <div class="big" id="eFace"></div>
   <h2 id="eTitle"></h2>
   <div id="eBadge" style="color:#ff8ec7;font-weight:700"></div>
+  <div id="eUnlock"></div>
   <div id="eScore" style="font-size:20px"></div>
   <div id="eText" style="max-width:500px;opacity:.85"></div>
   <form class="save" id="saveForm">
@@ -158,7 +162,34 @@ const CHARS = [
     quips: ["U mnie działa", "To nie błąd, tak miało być", "Kto mi to zepsuł?!", "Zrobię to w weekend"],
     titles: ["Junior od guzików", "Programista z ambicjami", "Krakowski senior", "Twórca Wszechświata"],
   },
+  {
+    id: "scurek", name: "Scurek", face: "😎", unlockAt: 100,
+    desc: "Podrywa laski, opycha skutery i inne dziwne rzeczy. Ma rentę i słabość do fejk kont.",
+    sky: "#ffe08a",
+    good: [["🛵","Skuter sprzedany!"],["💐","Numer od laski"],["💸","Renta wpłynęła"],["🪆","Opchnął matrioszkę"]],
+    bad:  [["📱","Fejk konto: „Anna, 23 lata”"],["💔","Dostał kosza"],["🔧","Skuter nie odpala"],["🎣","Wygrałeś iPhone'a! Kliknij link"]],
+    boosts: [["💌","Prawdziwa laska odpisała! x2 punkty","double"],["📮","Waloryzacja renty! +100","points",100]],
+    quips: ["Hej mała, kupisz skuter?", "Mam rentę i dużo czasu", "Ona na pewno jest prawdziwa", "Skuter jak nowy, tylko nie odpala"],
+    titles: ["Amator Tindera", "Handlarz z OLX", "Król skuterów", "Casanova na rencie"],
+  },
 ];
+
+// ---------- Unlockable characters (persisted per browser) ----------
+const UNLOCK_KEY = "kumple_unlocked";
+function loadUnlocked() {
+  try { return JSON.parse(localStorage.getItem(UNLOCK_KEY)) || []; } catch { return []; }
+}
+let unlocked = loadUnlocked();
+const isUnlocked = c => !c.unlockAt || unlocked.includes(c.id);
+// Unlock every locked character whose threshold was reached; returns the newly unlocked ones
+function checkUnlocks(points) {
+  const fresh = CHARS.filter(c => c.unlockAt && !unlocked.includes(c.id) && points >= c.unlockAt);
+  if (fresh.length) {
+    unlocked = unlocked.concat(fresh.map(c => c.id));
+    try { localStorage.setItem(UNLOCK_KEY, JSON.stringify(unlocked)); } catch {}
+  }
+  return fresh;
+}
 
 // Friend cameos: a visitor flies across the top and drops a shower of items.
 // kind "good" = gifts to catch, "bad" = dodge. Pair overrides ("player>visitor") tweak specific matchups.
@@ -170,6 +201,7 @@ const VISITS = {
   mateusz:  { emoji: "📚", kind: "lecture", text: "Mateusz tłumaczy zawiłości Olgi Tokarczuk!" },
   tomek:    { emoji: "🪵", kind: "bad",  text: "Tomek zrzuca kłody! Głowa w dół!" },
   dominik:  { emoji: "☕", kind: "good", text: "Dominik stawia wszystkim kawę!" },
+  scurek:   { emoji: "🛵", kind: "good", text: "Scurek opycha skutery po taniości!" },
 };
 const VISIT_OVERRIDES = {
   "mateusz>pawel":  { emoji: "📜", kind: "bad",  text: "Paweł zasypuje cię argumentami!" },
@@ -289,27 +321,36 @@ addEventListener("resize", () => { if (running) fitCanvas(); });
 let ch, player, items, popups, score, lives, timeLeft, spawnT, last, running, keys = {}, quipT, quip, shake = 0;
 // Active boost effects: seconds left for timed ones, flag for shield
 let effects, banner;
-let combo, bestCombo, visit, visitT, lectured, mateuszVisited;
+let combo, bestCombo, visit, visitT, lectured;
 const BOOST_TIME = 7, BOOST_CHANCE = 0.07, MAX_LIVES = 5;
 
-// Build menu cards
-for (const c of CHARS) {
-  const el = document.createElement("div");
-  el.className = "card";
-  const goods = (c.good.concat(c.goodNight || [])).map(g => g[0]).join(" ");
-  const bads = (c.bad.concat(c.badNight || [])).map(b => b[0]).join(" ");
-  el.innerHTML = `<div class="face">${c.face}</div><h3>${c.name}</h3><p>${c.desc}</p>
-    <div class="items">✅ ${goods}<br>❌ ${bads}</div>`;
-  el.onclick = () => start(c);
-  $("cards").appendChild(el);
+function renderCards() {
+  $("cards").innerHTML = "";
+  for (const c of CHARS) {
+    const el = document.createElement("div");
+    if (!isUnlocked(c)) {
+      el.className = "card locked";
+      el.innerHTML = `<div class="face">🔒</div><h3>???</h3><p>Tajemniczy kumpel. Zdobądź ${c.unlockAt} pkt dowolną postacią, żeby go odblokować.</p>`;
+      $("cards").appendChild(el);
+      continue;
+    }
+    el.className = "card";
+    const goods = (c.good.concat(c.goodNight || [])).map(g => g[0]).join(" ");
+    const bads = (c.bad.concat(c.badNight || [])).map(b => b[0]).join(" ");
+    el.innerHTML = `<div class="face">${c.face}</div><h3>${c.name}</h3><p>${c.desc}</p>
+      <div class="items">✅ ${goods}<br>❌ ${bads}</div>`;
+    el.onclick = () => start(c);
+    $("cards").appendChild(el);
+  }
 }
+renderCards();
 
 function show(id) {
   for (const s of ["menu", "game", "end"]) $(s).style.display = s === id ? "flex" : "none";
   if (id === "game") $("game").style.flexDirection = "column";
   document.body.classList.toggle("playing", id === "game");
   if (id !== "game") document.body.prepend($("mute"));
-  if (id === "menu") renderBoard($("menuBoard"));
+  if (id === "menu") { renderBoard($("menuBoard")); renderCards(); }
   scrollTo(0, 0);
 }
 
@@ -319,7 +360,7 @@ function start(c) {
   score = 0; lives = 3; timeLeft = GAME_TIME; spawnT = 0; quipT = 3; quip = null; shake = 0;
   effects = { double: 0, slow: 0, wide: 0, shield: false }; banner = null;
   combo = 0; bestCombo = 0; visit = null; visitT = 9 + Math.random() * 4;
-  lectured = 0; mateuszVisited = c.id === "mateusz";
+  lectured = 0;
   $("hName").textContent = `${c.face} ${c.name}`;
   $("hScore").textContent = "Punkty: 0";
   $("hTime").textContent = `⏱ ${GAME_TIME}s`;
@@ -373,10 +414,9 @@ function applyBoost(it) {
 }
 
 function startVisit() {
-  const others = CHARS.filter(c => c.id !== ch.id);
-  // Mateusz always drops in once per game to lecture about Tokarczuk
-  const who = mateuszVisited ? others[Math.floor(Math.random() * others.length)] : CHARS.find(c => c.id === "mateusz");
-  if (who.id === "mateusz") mateuszVisited = true;
+  // Locked characters don't visit until unlocked
+  const others = CHARS.filter(c => c.id !== ch.id && isUnlocked(c));
+  const who = others[Math.floor(Math.random() * others.length)];
   const def = VISIT_OVERRIDES[`${ch.id}>${who.id}`] || VISITS[who.id];
   const fromLeft = Math.random() < 0.5;
   visit = { who, def, x: fromLeft ? -40 : W + 40, dir: fromLeft ? 1 : -1, dropT: 0.3, drops: def.kind === "good" ? 8 : 5 };
@@ -632,9 +672,16 @@ function end(died) {
     mateusz: "Paweł wygrał tę dyskusję. Do następnych świąt.",
     tomek: "Organizm w końcu upomniał się o sen.",
     dominik: "Produkcja leży. Piątek, 16:58. Klasyk.",
+    scurek: "Fejk konto wyczyściło rentę. Znowu.",
   };
   $("eText").textContent = died ? deathLines[ch.id] : "Przetrwałeś cały dzień. Szacun.";
   died ? sfx.lose() : sfx.win();
+  const fresh = checkUnlocks(score);
+  $("eUnlock").style.display = fresh.length ? "block" : "none";
+  if (fresh.length) {
+    $("eUnlock").textContent = `🔓 Odblokowano: ${fresh.map(c => `${c.face} ${c.name}`).join(", ")}! Sprawdź w menu.`;
+    setTimeout(sfx.boost, 900);
+  }
   lastResult = { char: ch.id, score, saved: false };
   $("saveForm").style.display = score > 0 ? "flex" : "none";
   try { $("playerName").value = localStorage.getItem("kumple_name") || ""; } catch {}

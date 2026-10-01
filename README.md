@@ -23,6 +23,14 @@ Cała gra to jeden plik `index.html`. Nie trzeba niczego instalować ani budowa�
 | 🪓 **Tomek** | Za dnia drwal, nocą szef fabryki na Słowacji | drewno, a w nocy linia produkcyjna i kontrakty | niedźwiedź, osy, a w nocy awarie i drzemka na zmianie |
 | 👨‍💻 **Dominik** | Programista z Krakowa, twórca gry | kawa, zielone testy, Smok Wawelski, obwarzanek | błąd na produkcji, smog, zebranie, które mogło być mailem |
 
+### 🔒 Postać do odblokowania
+
+| Kumpel | Kim jest | Łapie ✅ | Unika ❌ |
+|---|---|---|---|
+| 😎 **Scurek** | Podrywa laski, opycha skutery i inne dziwne rzeczy, ma rentę i słabość do fejk kont | sprzedany skuter, numer od laski, renta, opchnięta matrioszka | fejk konto „Anna, 23 lata”, kosz od laski, skuter, który nie odpala, „Wygrałeś iPhone'a!” |
+
+Scurek odblokowuje się po zdobyciu **100 pkt dowolną postacią**. Do tego czasu w menu widać tylko kartę „🔒 ???”. Odblokowanie jest zapisywane w przeglądarce.
+
 U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. Wtedy zmieniają się też przedmioty, które spadają.
 
 ## Mechaniki
@@ -39,6 +47,7 @@ U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. Wted
 | Mateusz | 🗳️ Wygrane wybory (x2) · 🤝 Paweł przyznał rację (tarcza) |
 | Tomek | ☕ Podwójne espresso (spowolnienie) · 😴 Drzemka 15 minut (+1 życie) |
 | Dominik | 💸 Podwyżka (x2) · 🤖 Kod pisze się sam (spowolnienie) |
+| Scurek | 💌 Prawdziwa laska odpisała (x2) · 📮 Waloryzacja renty (+100 pkt) |
 
 - **x2 punkty, spowolnienie i szerszy chwyt** działają przez 7 sekund.
 - **Tarcza** chroni przed jednym złym trafieniem.
@@ -48,12 +57,12 @@ U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. Wted
 Każde 5 dobrych rzeczy złapanych pod rząd podnosi mnożnik punktów o 1, maksymalnie do x4. Przy kolejnych progach pojawiają się okrzyki, np. „Kojs patrzy z podziwem!” albo „Mateusz i Paweł się zgadzają!”. Złe trafienie zeruje serię.
 
 ### ✈️ Wizyty kumpli
-Co kilkanaście sekund przez planszę przelatuje inny kumpel i coś zrzuca.
+Co kilkanaście sekund przez planszę przelatuje losowy inny kumpel i coś zrzuca.
 
-**📚 Wykład Mateusza:** pierwszym gościem w każdej grze (u każdego oprócz samego Mateusza) jest Mateusz, który tłumaczy zawiłości Olgi Tokarczuk. Zrzuca książki, a każda złapana to −10 pkt. Nie zabiera życia ani nie przerywa kombo. Kto wysłucha choć jednego wykładu, na koniec dostaje tytuł honorowy **Lewak Gry**.
+**📚 Wykład Mateusza:** kiedy wpada Mateusz, tłumaczy zawiłości Olgi Tokarczuk. Zrzuca książki, a każda złapana to −10 pkt. Nie zabiera życia ani nie przerywa kombo. Kto wysłucha choć jednego wykładu, na koniec dostaje tytuł honorowy **Lewak Gry**.
 
 Pozostali goście:
-- **pomaga:** SW rozdaje kaski, Marcin przemyca kabanosy, Dominik stawia kawę;
+- **pomaga:** SW rozdaje kaski, Marcin przemyca kabanosy, Dominik stawia kawę, a Scurek (po odblokowaniu) opycha skutery po taniości;
 - **szkodzi:** Piotrek rzuca cegłami, Tomek zrzuca kłody;
 - **rywale:** u Mateusza Paweł zasypuje go argumentami;
 - **bracia** (Marcin, Dominik i Paweł) zawsze sobie pomagają.
@@ -68,7 +77,7 @@ Pozostali goście:
 - Czysty HTML, CSS i JavaScript na `<canvas>`, bez bibliotek i bez budowania.
 - Dźwięki są generowane w przeglądarce (Web Audio API), bez plików audio. Przycisk 🔊/🔇 pozwala je wyciszyć.
 - Układ dopasowuje się do telefonów. Sprawdzony w Chrome na rozmiarach ekranów m.in. iPhone SE, Redmi i Xiaomi, w pionie i w poziomie.
-- Tabela wyników i ustawienia są zapisywane w `localStorage`.
+- Tabela wyników, odblokowane postacie i ustawienia są zapisywane w `localStorage`.
 
 ### Jak dodać kumpla
-W `index.html` dopisz obiekt do tablicy `CHARS` (pola: `id`, `name`, `face`, `desc`, `good`, `bad`, `boosts`, `quips`, `titles`). Potem dodaj mu tekst porażki w `deathLines` i wizytę w `VISITS`.
+W `index.html` dopisz obiekt do tablicy `CHARS` (pola: `id`, `name`, `face`, `desc`, `good`, `bad`, `boosts`, `quips`, `titles`). Potem dodaj mu tekst porażki w `deathLines` i wizytę w `VISITS`. Żeby postać była do odblokowania, dodaj jej pole `unlockAt` z liczbą punktów.
