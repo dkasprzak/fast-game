@@ -49,6 +49,7 @@
     h1 { font-size:19px; margin-top:14px; padding:0 50px; text-align:center; }
     #hud { font-size:14px; gap:4px; }
     #menu, #end { padding:12px; }
+    .sub { margin-top:12px; }
     .grid { grid-template-columns:1fr 1fr; gap:8px; }
     .card { padding:10px; }
     .card .face { font-size:32px; }
@@ -75,6 +76,7 @@
 <div id="end">
   <div class="big" id="eFace"></div>
   <h2 id="eTitle"></h2>
+  <div id="eBadge" style="color:#ff8ec7;font-weight:700"></div>
   <div id="eScore" style="font-size:20px"></div>
   <div id="eText" style="max-width:500px;opacity:.85"></div>
   <form class="save" id="saveForm">
@@ -130,7 +132,7 @@ const CHARS = [
   {
     id: "mateusz", name: "Mateusz", face: "✊", desc: "Lewak pełną gębą. Paweł mu nie odpuści, ale on Pawłowi też nie.",
     sky: "#ffc2e0",
-    good: [["🚲","Rower lepszy niż auto"],["🌱","Tofu!"],["📢","Protest pod Sejmem"],["📚","Książka z lewej półki"]],
+    good: [["🚲","Rower lepszy niż auto"],["🌱","Tofu!"],["📢","Protest pod Sejmem"],["📚","Książka z lewej półki"],["🥛","Mleko sojowe"]],
     bad:  [["🚙","Wielki SUV"],["📜","Argument Pawła"],["🍖","Schabowy"]],
     boosts: [["🗳️","Wygrane wybory! x2 punkty","double"],["🤝","Paweł przyznał rację! Tarcza","shield"]],
     quips: ["Paweł, to wina systemu", "Znowu ten kapitalizm...", "Sprawdź źródła, Paweł", "Rowerem byłoby szybciej"],
@@ -165,18 +167,28 @@ const VISITS = {
   piotrek:  { emoji: "🧱", kind: "bad",  text: "Piotrek rzuca cegłami! Uważaj na głowę!" },
   marcin:   { emoji: "🌭", kind: "good", text: "Marcin przemyca kabanosy z zakładu!" },
   pawel:    { emoji: "📜", kind: "good", text: "Paweł sypie argumentami!" },
-  mateusz:  { emoji: "🌱", kind: "good", text: "Mateusz rozdaje darmowe tofu!" },
+  mateusz:  { emoji: "📚", kind: "lecture", text: "Mateusz tłumaczy zawiłości Olgi Tokarczuk!" },
   tomek:    { emoji: "🪵", kind: "bad",  text: "Tomek zrzuca kłody! Głowa w dół!" },
   dominik:  { emoji: "☕", kind: "good", text: "Dominik stawia wszystkim kawę!" },
 };
 const VISIT_OVERRIDES = {
-  "pawel>mateusz":  { emoji: "🌱", kind: "bad",  text: "Mateusz zasypuje cię tofu! Uciekaj!" },
   "mateusz>pawel":  { emoji: "📜", kind: "bad",  text: "Paweł zasypuje cię argumentami!" },
   "sw>piotrek":     { emoji: "🧱", kind: "good", text: "Piotrek podrzuca cegły dla Strabagu!" },
   "marcin>dominik": { emoji: "☕", kind: "good", text: "Brat Dominik stawia kawę w przerwie!" },
   "dominik>marcin": { emoji: "🌭", kind: "good", text: "Brat Marcin przemyca kabanosy!" },
   "pawel>marcin":   { emoji: "🌭", kind: "good", text: "Brat Marcin przemyca kabanosy!" },
 };
+// What Mateusz lectures about when a book hits you (-10 pts each)
+const LECTURE_LINES = [
+  "Księgi Jakubowe, rozdział 7",
+  "Czuły narrator, wiesz o co chodzi?",
+  "Bieguni to metafora!",
+  "Prowadź swój pług... i słuchaj",
+  "To nie gruba książka, to głęboka",
+  "Nobel się należał, przyznaj",
+];
+const LECTURE_PENALTY = 10;
+
 const COMBO_SHOUTS = {
   5:  "Rozgrzewka!",
   10: "Kojs patrzy z podziwem!",
@@ -277,7 +289,7 @@ addEventListener("resize", () => { if (running) fitCanvas(); });
 let ch, player, items, popups, score, lives, timeLeft, spawnT, last, running, keys = {}, quipT, quip, shake = 0;
 // Active boost effects: seconds left for timed ones, flag for shield
 let effects, banner;
-let combo, bestCombo, visit, visitT;
+let combo, bestCombo, visit, visitT, lectured, mateuszVisited;
 const BOOST_TIME = 7, BOOST_CHANCE = 0.07, MAX_LIVES = 5;
 
 // Build menu cards
@@ -307,6 +319,7 @@ function start(c) {
   score = 0; lives = 3; timeLeft = GAME_TIME; spawnT = 0; quipT = 3; quip = null; shake = 0;
   effects = { double: 0, slow: 0, wide: 0, shield: false }; banner = null;
   combo = 0; bestCombo = 0; visit = null; visitT = 9 + Math.random() * 4;
+  lectured = 0; mateuszVisited = c.id === "mateusz";
   $("hName").textContent = `${c.face} ${c.name}`;
   $("hScore").textContent = "Punkty: 0";
   $("hTime").textContent = `⏱ ${GAME_TIME}s`;
@@ -361,12 +374,14 @@ function applyBoost(it) {
 
 function startVisit() {
   const others = CHARS.filter(c => c.id !== ch.id);
-  const who = others[Math.floor(Math.random() * others.length)];
+  // Mateusz always drops in once per game to lecture about Tokarczuk
+  const who = mateuszVisited ? others[Math.floor(Math.random() * others.length)] : CHARS.find(c => c.id === "mateusz");
+  if (who.id === "mateusz") mateuszVisited = true;
   const def = VISIT_OVERRIDES[`${ch.id}>${who.id}`] || VISITS[who.id];
   const fromLeft = Math.random() < 0.5;
-  visit = { who, def, x: fromLeft ? -40 : W + 40, dir: fromLeft ? 1 : -1, dropT: 0.3, drops: def.kind === "bad" ? 5 : 8 };
+  visit = { who, def, x: fromLeft ? -40 : W + 40, dir: fromLeft ? 1 : -1, dropT: 0.3, drops: def.kind === "good" ? 8 : 5 };
   banner = { emoji: who.face, text: def.text, t: 2 };
-  def.kind === "bad" ? sfx.hit() : sfx.boost();
+  def.kind === "good" ? sfx.boost() : sfx.hit();
 }
 
 function updateVisit(dt) {
@@ -378,12 +393,12 @@ function updateVisit(dt) {
   // Cross the board in ~2.6s, dropping items along the way
   visit.x += visit.dir * (W + 80) / 2.6 * dt;
   visit.dropT -= dt;
-  const bad = visit.def.kind === "bad";
+  const bad = visit.def.kind === "bad", lecture = visit.def.kind === "lecture";
   if (visit.dropT <= 0 && visit.drops > 0 && visit.x > 20 && visit.x < W - 20) {
     visit.drops--;
-    visit.dropT = 2.2 / (bad ? 5 : 8);
+    visit.dropT = 2.2 / (visit.def.kind === "good" ? 8 : 5);
     items.push({ x: visit.x, y: 90, vy: H * 0.32, emoji: visit.def.emoji,
-      label: bad ? `Od: ${visit.who.name}` : `Prezent od: ${visit.who.name}`, bad, rot: 0, vr: (Math.random() - .5) * 6 });
+      label: bad ? `Od: ${visit.who.name}` : `Prezent od: ${visit.who.name}`, bad, lecture, rot: 0, vr: (Math.random() - .5) * 6 });
   }
   if (visit.x < -60 || visit.x > W + 60) { visit = null; visitT = 11 + Math.random() * 5; }
 }
@@ -429,6 +444,11 @@ function update(dt) {
       it.dead = true;
       if (it.boost) {
         applyBoost(it);
+      } else if (it.lecture) {
+        lectured++;
+        score -= LECTURE_PENALTY;
+        addPopup(`-${LECTURE_PENALTY} ${LECTURE_LINES[Math.floor(Math.random() * LECTURE_LINES.length)]}`, it.x, it.y, "#c2255c");
+        sfx.quip();
       } else if (it.bad && effects.shield) {
         effects.shield = false;
         addPopup("🛡️ Uff, tarcza!", it.x, it.y, "#3b6fd8");
@@ -601,6 +621,8 @@ function end(died) {
   const rank = score < 100 ? 0 : score < 250 ? 1 : score < 400 ? 2 : 3;
   $("eFace").textContent = ch.face;
   $("eTitle").textContent = ch.titles[rank];
+  $("eBadge").textContent = lectured > 0
+    ? `📚 + tytuł honorowy: Lewak Gry (wysłuchane wykłady o Tokarczuk: ${lectured})` : "";
   $("eScore").textContent = `Wynik: ${score} pkt` + (bestCombo >= 5 ? ` · najlepsze kombo: ${bestCombo}` : "");
   const deathLines = {
     sw: "Za dużo przerw. W Austrii by Cię zwolnili.",
@@ -640,7 +662,7 @@ $("saveForm").onsubmit = e => {
 $("share").onclick = async () => {
   const url = location.protocol.startsWith("http") ? location.href.split("#")[0] : "";
   const text = `🍻 Kumple: Łap co Twoje\n${ch.face} ${ch.name}: ${score} pkt, tytuł „${$("eTitle").textContent}”` +
-    (bestCombo >= 5 ? `, kombo ${bestCombo}` : "") + "\nDasz radę lepiej?" + (url ? `\n${url}` : "");
+    (bestCombo >= 5 ? `, kombo ${bestCombo}` : "") + (lectured > 0 ? " + 📚 Lewak Gry" : "") + "\nDasz radę lepiej?" + (url ? `\n${url}` : "");
   try {
     if (navigator.share) { await navigator.share({ text }); return; }
     await navigator.clipboard.writeText(text);

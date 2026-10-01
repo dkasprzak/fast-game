@@ -19,7 +19,7 @@ Cała gra to jeden plik `index.html`. Nie trzeba niczego instalować ani budowa�
 | 🏗️ **Piotrek** | Haruje w Austrii, dom stawia w Jabłonce | cegły, wypłata w ojro, więźba | faktury, deszcz w Jabłonce, fachowiec, który nie dojechał |
 | 🧐 **Marcin** | Kontroler jakości kiełbas w Kabanosie | kabanosy, boczek | sanepid, brokuł w kiełbasie, skarpeta w farszu |
 | 😤 **Paweł** | Zawsze gotów na kłótnię z Mateuszem | argumenty, liczby, schabowy | tofu, ścieżki rowerowe, krzyczący Mateusz |
-| ✊ **Mateusz** | Lewak pełną gębą | rower, tofu, protesty | SUV, argumenty Pawła, schabowy |
+| ✊ **Mateusz** | Lewak pełną gębą | rower, tofu, mleko sojowe, protesty | SUV, argumenty Pawła, schabowy |
 | 🪓 **Tomek** | Za dnia drwal, nocą szef fabryki na Słowacji | drewno, a w nocy linia produkcyjna i kontrakty | niedźwiedź, osy, a w nocy awarie i drzemka na zmianie |
 | 👨‍💻 **Dominik** | Programista z Krakowa, twórca gry | kawa, zielone testy, Smok Wawelski, obwarzanek | błąd na produkcji, smog, zebranie, które mogło być mailem |
 
@@ -48,10 +48,14 @@ U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. Wted
 Każde 5 dobrych rzeczy złapanych pod rząd podnosi mnożnik punktów o 1, maksymalnie do x4. Przy kolejnych progach pojawiają się okrzyki, np. „Kojs patrzy z podziwem!” albo „Mateusz i Paweł się zgadzają!”. Złe trafienie zeruje serię.
 
 ### ✈️ Wizyty kumpli
-Co kilkanaście sekund przez planszę przelatuje inny kumpel i coś zrzuca:
+Co kilkanaście sekund przez planszę przelatuje inny kumpel i coś zrzuca.
+
+**📚 Wykład Mateusza:** pierwszym gościem w każdej grze (u każdego oprócz samego Mateusza) jest Mateusz, który tłumaczy zawiłości Olgi Tokarczuk. Zrzuca książki, a każda złapana to −10 pkt. Nie zabiera życia ani nie przerywa kombo. Kto wysłucha choć jednego wykładu, na koniec dostaje tytuł honorowy **Lewak Gry**.
+
+Pozostali goście:
 - **pomaga:** SW rozdaje kaski, Marcin przemyca kabanosy, Dominik stawia kawę;
 - **szkodzi:** Piotrek rzuca cegłami, Tomek zrzuca kłody;
-- **rywale:** u Pawła Mateusz zasypuje go tofu, a u Mateusza Paweł zasypuje go argumentami;
+- **rywale:** u Mateusza Paweł zasypuje go argumentami;
 - **bracia** (Marcin, Dominik i Paweł) zawsze sobie pomagają.
 
 ### 🏆 Tytuły, wyniki i chwalenie się
