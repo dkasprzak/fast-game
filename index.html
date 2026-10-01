@@ -20,7 +20,8 @@
   .card .items { margin-top:8px; font-size:14px; }
   #game { display:none; position:relative; align-items:center; padding:8px; width:100%; }
   canvas { background:#87b8e8; border-radius:14px; display:block; touch-action:none; user-select:none; -webkit-user-select:none; }
-  #hud { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:4px 2px 8px; font-size:18px; font-weight:600; }
+  #hud { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:4px 2px 8px; font-size:18px; font-weight:600; white-space:nowrap; }
+  #hud #mute { position:static; padding:4px 8px; font-size:16px; }
   #end { display:none; text-align:center; }
   #end .big { font-size:64px; }
   #end h2 { margin:0; color:var(--accent); }
@@ -37,9 +38,11 @@
   .save { display:flex; gap:8px; width:100%; max-width:460px; }
   .save input { flex:1; min-width:0; padding:12px; border-radius:10px; border:2px solid var(--panel); background:#11131c; color:var(--text); font-size:16px; }
   body.playing h1, body.playing .sub { display:none; }
+  .buttons { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
   @media (max-width:600px) {
-    h1 { font-size:22px; margin-top:12px; }
-    #hud { font-size:15px; }
+    h1 { font-size:19px; margin-top:14px; padding:0 50px; text-align:center; }
+    #hud { font-size:14px; gap:4px; }
+    #menu, #end { padding:12px; }
     .grid { grid-template-columns:1fr 1fr; gap:8px; }
     .card { padding:10px; }
     .card .face { font-size:32px; }
@@ -72,7 +75,7 @@
     <input id="playerName" maxlength="16" placeholder="Twoje imię" autocomplete="off">
     <button type="submit">Zapisz</button>
   </form>
-  <div style="display:flex;gap:10px">
+  <div class="buttons">
     <button id="again">Jeszcze raz</button>
     <button class="ghost" id="back">Zmień kumpla</button>
   </div>
@@ -143,8 +146,9 @@ const CHARS = [
 
 const $ = id => document.getElementById(id);
 const cv = $("c"), ctx = cv.getContext("2d");
-const W = 600, GAME_TIME = 45;
-let H = 600;
+const GAME_TIME = 45;
+// Board size in CSS pixels; set by fitCanvas()
+let W = 600, H = 600;
 
 // ---------- Sound (Web Audio, no files) ----------
 let audio = null;
@@ -205,17 +209,20 @@ renderBoard($("menuBoard"));
 // ---------- Responsive canvas ----------
 function fitCanvas() {
   const hudH = $("hud").offsetHeight || 40;
-  const availW = Math.min(window.innerWidth - 16, 600);
-  const availH = window.innerHeight - hudH - 24;
-  // Logical width is fixed (600); height follows screen aspect so phones get a taller board
-  H = Math.round(Math.max(500, Math.min(1100, W * availH / availW)));
-  cv.width = W; cv.height = H;
-  let cssW = availW, cssH = cssW * H / W;
-  if (cssH > availH) { cssH = availH; cssW = cssH * W / H; }
-  cv.style.width = cssW + "px";
-  cv.style.height = cssH + "px";
-  $("hud").style.width = cssW + "px";
-  if (player) player.y = H - 60;
+  // Game units = CSS pixels, so emoji and text keep a readable size on phones
+  W = Math.floor(Math.min(window.innerWidth - 16, 600));
+  H = Math.floor(Math.max(260, Math.min(window.innerHeight - hudH - 20, W * 2.2)));
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  cv.style.width = W + "px";
+  cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  $("hud").style.width = W + "px";
+  if (player) {
+    player.y = H - 55;
+    player.speed = W * 0.9;
+    player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, player.x));
+  }
 }
 addEventListener("resize", () => { if (running) fitCanvas(); });
 
@@ -237,6 +244,7 @@ function show(id) {
   for (const s of ["menu", "game", "end"]) $(s).style.display = s === id ? "flex" : "none";
   if (id === "game") $("game").style.flexDirection = "column";
   document.body.classList.toggle("playing", id === "game");
+  if (id !== "game") document.body.prepend($("mute"));
   if (id === "menu") renderBoard($("menuBoard"));
   scrollTo(0, 0);
 }
@@ -246,9 +254,14 @@ function start(c) {
   items = []; popups = [];
   score = 0; lives = 3; timeLeft = GAME_TIME; spawnT = 0; quipT = 3; quip = null; shake = 0;
   $("hName").textContent = `${c.face} ${c.name}`;
+  $("hScore").textContent = "Punkty: 0";
+  $("hTime").textContent = `⏱ ${GAME_TIME}s`;
+  $("hLives").textContent = "❤️❤️❤️";
+  $("hud").appendChild($("mute"));
   show("game");
-  player = { x: W / 2, y: 0, w: 70, speed: 420 };
+  player = { x: 0, y: 0, w: 64, speed: 420 };
   fitCanvas();
+  player.x = W / 2;
   running = true; last = performance.now();
   sfx.start();
   requestAnimationFrame(loop);
@@ -266,7 +279,8 @@ function spawn() {
   const [emoji, label] = pool[Math.floor(Math.random() * pool.length)];
   items.push({
     x: 30 + Math.random() * (W - 60), y: -30,
-    vy: 150 + Math.random() * 80 + difficulty * 220,
+    // Speed relative to board height, so tall phone boards don't feel slow
+    vy: H * (0.25 + Math.random() * 0.13 + difficulty * 0.37),
     emoji, label, bad: isBad, rot: Math.random() * 6, vr: (Math.random() - .5) * 4,
   });
 }
@@ -343,7 +357,7 @@ function draw() {
   if (shake > 0) ctx.translate((Math.random() - .5) * 12, (Math.random() - .5) * 12);
   ctx.fillStyle = isNight() ? ch.night : ch.sky;
   ctx.fillRect(-10, -10, W + 20, H + 20);
-  if (isNight()) { ctx.font = "40px serif"; ctx.fillText("🌙", W - 70, 60); }
+  if (isNight()) { ctx.font = "40px serif"; ctx.fillText("🌙", W - 50, 40); }
 
   // ground
   ctx.fillStyle = isNight() ? "#2c3a2c" : "#6b9b4a";
@@ -378,11 +392,17 @@ function draw() {
 
   for (const p of popups) {
     ctx.globalAlpha = Math.max(0, p.t);
-    ctx.font = "bold 20px system-ui";
+    // Shrink long labels to fit narrow screens, then keep them inside the board
+    let size = 20;
+    ctx.font = `bold ${size}px system-ui`;
+    const maxW = W - 16;
+    let tw = ctx.measureText(p.text).width;
+    if (tw > maxW) { size = Math.max(11, Math.floor(size * maxW / tw)); ctx.font = `bold ${size}px system-ui`; tw = ctx.measureText(p.text).width; }
+    const px = Math.max(tw / 2 + 8, Math.min(W - tw / 2 - 8, p.x));
     ctx.lineWidth = 4; ctx.strokeStyle = "#fff";
-    ctx.strokeText(p.text, Math.max(100, Math.min(W - 100, p.x)), p.y);
+    ctx.strokeText(p.text, px, p.y);
     ctx.fillStyle = p.color;
-    ctx.fillText(p.text, Math.max(100, Math.min(W - 100, p.x)), p.y);
+    ctx.fillText(p.text, px, p.y);
     ctx.globalAlpha = 1;
   }
   ctx.restore();
