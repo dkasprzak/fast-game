@@ -53,7 +53,7 @@
 <body>
 <button id="mute" title="Dźwięk">🔊</button>
 <h1>🍻 Kumple: Łap co Twoje</h1>
-<div class="sub">Wybierz kumpla, łap dobre rzeczy, unikaj złych. 3 życia, 45 sekund.</div>
+<div class="sub">Wybierz kumpla, łap dobre rzeczy, unikaj złych. Świecące to niespodzianki! 3 życia, 45 sekund.</div>
 
 <div id="menu">
   <div class="grid" id="cards"></div>
@@ -85,62 +85,69 @@
 <script>
 const CHARS = [
   {
-    id: "sw", name: "SW", face: "👷", desc: "Strabag do szpiku kości. Austria to nie kraj, to styl życia.",
+    id: "sw", name: "SW", face: "👷", desc: "Strabag ma we krwi. W Austrii wszystko jest lepsze, nawet asfalt.",
     sky: "#9fd3ff",
-    good: [["⛑️","Kask Strabag!"],["🇦🇹","Servus!"],["🏔️","Alpen!"],["🥨","Brezel!"]],
-    bad:  [["🐌","Budowa opóźniona"],["🇩🇪","To nie Austria!!"],["🛌","Urlop?! Nigdy"]],
-    quips: ["W Austrii by tak nie było", "Strabag buduje, SW nadzoruje", "Wiener Schnitzel > schabowy", "Grüß Gott, panowie"],
+    good: [["⛑️","Kask ze Strabagu!"],["🇦🇹","Austria górą!"],["🏔️","Alpy jak malowane"],["🥨","Precel do kawy"]],
+    bad:  [["🐌","Budowa w plecy"],["🇩🇪","To Niemcy, nie Austria!"],["🛌","Urlop?! Po co?"]],
+    boosts: [["🏆","Awans w Strabagu! x2 punkty","double"],["🎿","Weekend w Alpach! +1 życie","life"]],
+    quips: ["W Austrii by tak nie było", "Strabag buduje, SW pilnuje", "Sznycel bije schabowego", "Panowie, po austriacku proszę"],
     titles: ["Praktykant w Strabagu", "Brygadzista", "Honorowy Austriak", "Kanclerz Austrii"],
   },
   {
-    id: "piotrek", name: "Piotrek", face: "🏗️", desc: "Robi w Austrii, a dom stawia w Jabłonce. Logistyka level hard.",
+    id: "piotrek", name: "Piotrek", face: "🏗️", desc: "Haruje w Austrii, a dom stawia w Jabłonce. Między jednym a drugim tylko autostrada.",
     sky: "#b5e3a1",
-    good: [["🧱","Cegła na dom!"],["💶","Wypłata z Austrii"],["🪵","Więźba!"],["🏠","Kolejne piętro"]],
-    bad:  [["🧾","Faktura od fachowca"],["🌧️","Leje w Jabłonce"],["🤷","Fachowiec nie przyszedł"]],
-    quips: ["Jeszcze tylko dach...", "Euro zarobione, złotówki wydane", "Jabłonka czeka!", "Fachowiec będzie w czwartek. Którym?"],
+    good: [["🧱","Cegła na chałupę!"],["💶","Wypłata w ojro"],["🪵","Więźba przyjechała"],["🏠","Kolejne piętro"]],
+    bad:  [["🧾","Faktura od fachowca"],["🌧️","Leje w Jabłonce"],["🤷","Fachowiec nie dojechał"]],
+    boosts: [["🏦","Kredyt przyznany! +100","points",100],["👷","Fachowiec przyszedł na czas! Szerszy chwyt","wide"]],
+    quips: ["Jeszcze tylko dach i luz", "Zarabiam w ojro, wydaję w złotówkach", "Jabłonka czeka!", "Fachowiec będzie w czwartek. Tylko którym?"],
     titles: ["Fundament wylany", "Stan surowy", "Dach jest!", "Parapetówa w Jabłonce"],
   },
   {
-    id: "marcin", name: "Marcin", face: "🧐", desc: "Brat Dominika i Pawła. Kontroler jakości kiełbas w Kabanosie. Odpowiedzialna robota.",
+    id: "marcin", name: "Marcin", face: "🧐", desc: "Brat Dominika i Pawła. Kontroler jakości kiełbas w Kabanosie. Ktoś musi to robić.",
     sky: "#ffd9a8",
-    good: [["🌭","Kabanos zatwierdzony"],["🥓","Boczek OK"],["🍖","Pierwsza klasa"]],
-    bad:  [["🦠","Sanepid!"],["🥦","Warzywo w kiełbasie?!"],["🧦","Skarpeta w masie"]],
-    quips: ["Trzeba spróbować... dla jakości", "Ten kabanos jest za mało kabanosowy", "Kontrola jakości to stan umysłu", "Jeszcze jeden. Dla pewności."],
+    good: [["🌭","Kabanos przeszedł kontrolę"],["🥓","Boczek jak trzeba"],["🍖","Pierwsza klasa"]],
+    bad:  [["🦠","Sanepid wjeżdża!"],["🥦","Brokuł w kiełbasie?!"],["🧦","Skarpeta w farszu"]],
+    boosts: [["💰","Premia od Kojsa! x2 punkty","double"],["🍺","Piwko z braćmi! +1 życie","life"]],
+    quips: ["Trzeba spróbować. Dla jakości", "Ten kabanos za mało kabanosowy", "Kontrola musi być", "Jeszcze jeden. Dla pewności."],
     titles: ["Stażysta od parówek", "Degustator", "Mistrz Kabanosa", "Kiełbasiany Bóg"],
   },
   {
-    id: "pawel", name: "Paweł", face: "🗣️", desc: "Zawsze gotów na debatę z Mateuszem. Argumenty ma naostrzone.",
+    id: "pawel", name: "Paweł", face: "🗣️", desc: "Zawsze gotów na kłótnię z Mateuszem. Argumenty ma naostrzone jak siekierę.",
     sky: "#c9c3ff",
-    good: [["📜","Mocny argument"],["📊","Statystyka!"],["🦅","Orzeł!"],["🍖","Schabowy"]],
-    bad:  [["🥗","Tofu od Mateusza"],["🚲","Ścieżka rowerowa"],["📢","Mateusz krzyczy"]],
-    quips: ["Mateusz, posłuchaj...", "To jest kwestia faktów", "Ale skąd masz te dane?", "Wigilia znowu będzie gorąca"],
-    titles: ["Komentator z Facebooka", "Publicysta", "Ekspert w TV", "Pogromca Mateusza"],
+    good: [["📜","Mocny argument"],["📊","Liczby nie kłamią"],["🦅","Orzeł biały!"],["🍖","Schabowy z ziemniakami"]],
+    bad:  [["🥗","Tofu od Mateusza"],["🚲","Ścieżka rowerowa"],["📢","Mateusz się drze"]],
+    boosts: [["📺","Zaproszenie do telewizji! x2 punkty","double"],["🤝","Mateusz przyznał rację! Tarcza","shield"]],
+    quips: ["Mateusz, posłuchaj mnie", "Fakty są po mojej stronie", "A skąd ty to masz?", "Na Wigilii dokończymy"],
+    titles: ["Komentator z Facebooka", "Felietonista", "Ekspert w telewizji", "Pogromca Mateusza"],
   },
   {
     id: "mateusz", name: "Mateusz", face: "✊", desc: "Lewak pełną gębą. Paweł mu nie odpuści, ale on Pawłowi też nie.",
     sky: "#ffc2e0",
-    good: [["🚲","Rower > auto"],["🌱","Tofu!"],["📢","Manifestacja!"],["📚","Książka z lewej półki"]],
-    bad:  [["🚙","SUV"],["📜","Argument Pawła"],["🍖","Schabowy"]],
-    quips: ["Paweł, to jest systemowe", "Kapitalizm znowu...", "Sprawdź źródła, Paweł", "Rowerem było szybciej"],
-    titles: ["Aktywista z osiedla", "Organizator demo", "Poseł Lewicy", "Pogromca Pawła"],
+    good: [["🚲","Rower lepszy niż auto"],["🌱","Tofu!"],["📢","Protest pod Sejmem"],["📚","Książka z lewej półki"]],
+    bad:  [["🚙","Wielki SUV"],["📜","Argument Pawła"],["🍖","Schabowy"]],
+    boosts: [["🗳️","Wygrane wybory! x2 punkty","double"],["🤝","Paweł przyznał rację! Tarcza","shield"]],
+    quips: ["Paweł, to wina systemu", "Znowu ten kapitalizm...", "Sprawdź źródła, Paweł", "Rowerem byłoby szybciej"],
+    titles: ["Aktywista z osiedla", "Organizator protestu", "Poseł Lewicy", "Pogromca Pawła"],
   },
   {
-    id: "tomek", name: "Tomek", face: "🪓", desc: "Za dnia drwal, nocą szef fabryki w Slovensku. Kiedy on śpi? Nikt nie wie.",
+    id: "tomek", name: "Tomek", face: "🪓", desc: "Za dnia drwal, nocą szef fabryki na Słowacji. Kiedy on śpi? Nikt nie wie.",
     sky: "#a7e39b", night: "#1d2347",
-    good: [["🪵","Drewno!"],["🌲","Drzewo padło"]],
-    bad:  [["🐻","Niedźwiedź"],["🐝","Osy w pniu"]],
-    goodNight: [["⚙️","Linia chodzi"],["📦","Paleta wysłana"],["💶","Kontrakt!"]],
-    badNight:  [["💤","Zasnął na zmianie"],["🔥","Awaria!"],["🍺","Slovenské pivo"]],
-    quips: ["Dobrý deň!", "Spanie jest dla słabych", "Rano siekiera, wieczorem Excel", "Nočná zmena!"],
-    titles: ["Pomocnik drwala", "Drwal z ambicjami", "Dyrektor fabryki", "Cesarz Slovenska"],
+    good: [["🪵","Drewno na opał"],["🌲","Drzewo leży!"]],
+    bad:  [["🐻","Niedźwiedź!"],["🐝","Osy w pniu"]],
+    goodNight: [["⚙️","Linia chodzi"],["📦","Paleta poszła"],["💶","Nowy kontrakt!"]],
+    badNight:  [["💤","Przysnął na zmianie"],["🔥","Awaria!"],["🍺","Piwko po słowacku"]],
+    boosts: [["☕","Podwójne espresso! Spowolnienie","slow"],["😴","Drzemka 15 minut! +1 życie","life"]],
+    quips: ["Spanie jest dla słabych", "Rano piła, wieczorem Excel", "Nocna zmiana, jedziemy!", "Kawa, siekiera, fabryka"],
+    titles: ["Pomocnik drwala", "Drwal z ambicjami", "Dyrektor fabryki", "Król Słowacji"],
   },
   {
-    id: "dominik", name: "Dominik", face: "👨‍💻", desc: "Programista z Krakowa i twórca tej gry. Jeśli coś nie działa, to feature.",
+    id: "dominik", name: "Dominik", face: "👨‍💻", desc: "Programista z Krakowa i twórca tej gry. Jak coś nie działa, to tak miało być.",
     sky: "#d6e4ff",
-    good: [["☕","Kawka!"],["✅","Testy przeszły"],["🐉","Smok Wawelski"],["🥯","Obwarzanek"]],
-    bad:  [["🐛","Bug na produkcji"],["🌫️","Smog w Krakowie"],["📅","Spotkanie, które mogło być mailem"]],
-    quips: ["U mnie działa", "To nie bug, to feature", "Kto pushował na maina?!", "Zrobię to w weekend"],
-    titles: ["Junior od CSS-a", "Mid z ambicjami", "Senior Kraków Dev", "Twórca Wszechświata"],
+    good: [["☕","Kawka!"],["✅","Testy przeszły"],["🐉","Smok Wawelski"],["🥯","Obwarzanek z Rynku"]],
+    bad:  [["🐛","Błąd na produkcji"],["🌫️","Smog nad Krakowem"],["📅","Zebranie, które mogło być mailem"]],
+    boosts: [["💸","Podwyżka! x2 punkty","double"],["🤖","Kod pisze się sam! Spowolnienie","slow"]],
+    quips: ["U mnie działa", "To nie błąd, tak miało być", "Kto mi to zepsuł?!", "Zrobię to w weekend"],
+    titles: ["Junior od guzików", "Programista z ambicjami", "Krakowski senior", "Twórca Wszechświata"],
   },
 ];
 
@@ -184,6 +191,8 @@ const sfx = {
   quip:  () => tone(1200, 0.05, { type: "sine", vol: 0.05 }),
   win:   () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, { delay: i * 0.12, type: "triangle", vol: 0.15 })),
   lose:  () => [392, 349, 311, 262].forEach((f, i) => tone(f, 0.3, { delay: i * 0.2, type: "sawtooth", vol: 0.1 })),
+  boost: () => [523, 784, 659, 1047, 1319].forEach((f, i) => tone(f, 0.15, { delay: i * 0.07, type: "square", vol: 0.12 })),
+  shield: () => tone(300, 0.25, { type: "triangle", slide: 600, vol: 0.15 }),
 };
 
 // ---------- Leaderboard (localStorage) ----------
@@ -227,6 +236,9 @@ function fitCanvas() {
 addEventListener("resize", () => { if (running) fitCanvas(); });
 
 let ch, player, items, popups, score, lives, timeLeft, spawnT, last, running, keys = {}, quipT, quip, shake = 0;
+// Active boost effects: seconds left for timed ones, flag for shield
+let effects, banner;
+const BOOST_TIME = 7, BOOST_CHANCE = 0.07, MAX_LIVES = 5;
 
 // Build menu cards
 for (const c of CHARS) {
@@ -253,6 +265,7 @@ function start(c) {
   ch = c;
   items = []; popups = [];
   score = 0; lives = 3; timeLeft = GAME_TIME; spawnT = 0; quipT = 3; quip = null; shake = 0;
+  effects = { double: 0, slow: 0, wide: 0, shield: false }; banner = null;
   $("hName").textContent = `${c.face} ${c.name}`;
   $("hScore").textContent = "Punkty: 0";
   $("hTime").textContent = `⏱ ${GAME_TIME}s`;
@@ -274,15 +287,32 @@ function spawn() {
   const goodPool = night ? ch.goodNight : ch.good;
   const badPool = night ? ch.badNight : ch.bad;
   const difficulty = 1 - timeLeft / GAME_TIME; // 0 -> 1
+  // Speed relative to board height, so tall phone boards don't feel slow
+  const vy = H * (0.25 + Math.random() * 0.13 + difficulty * 0.37);
+  const x = 30 + Math.random() * (W - 60);
+  if (ch.boosts && Math.random() < BOOST_CHANCE) {
+    const [emoji, label, type, value] = ch.boosts[Math.floor(Math.random() * ch.boosts.length)];
+    items.push({ x, y: -30, vy: vy * 0.8, emoji, label, boost: { type, value }, rot: 0, vr: 0 });
+    return;
+  }
   const isBad = Math.random() < 0.3 + difficulty * 0.2;
   const pool = isBad ? badPool : goodPool;
   const [emoji, label] = pool[Math.floor(Math.random() * pool.length)];
   items.push({
-    x: 30 + Math.random() * (W - 60), y: -30,
-    // Speed relative to board height, so tall phone boards don't feel slow
-    vy: H * (0.25 + Math.random() * 0.13 + difficulty * 0.37),
+    x, y: -30, vy,
     emoji, label, bad: isBad, rot: Math.random() * 6, vr: (Math.random() - .5) * 4,
   });
+}
+
+function applyBoost(it) {
+  const { type, value } = it.boost;
+  if (type === "double" || type === "slow" || type === "wide") effects[type] = BOOST_TIME;
+  if (type === "life") lives = Math.min(MAX_LIVES, lives + 1);
+  if (type === "shield") effects.shield = true;
+  if (type === "points") score += value;
+  banner = { emoji: it.emoji, text: it.label, t: 2.2 };
+  sfx.boost();
+  if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
 }
 
 function addPopup(text, x, y, color) {
@@ -301,7 +331,7 @@ function loop(now) {
 function update(dt) {
   const wasNight = isNight();
   timeLeft -= dt;
-  if (!wasNight && isNight()) { addPopup("🌙 NOCNA ZMIANA W SLOVENSKU!", W / 2, H / 2, "#ffcc33"); sfx.night(); }
+  if (!wasNight && isNight()) { addPopup("🌙 NOCNA ZMIANA NA SŁOWACJI!", W / 2, H / 2, "#ffcc33"); sfx.night(); }
 
   if (keys.left) player.x -= player.speed * dt;
   if (keys.right) player.x += player.speed * dt;
@@ -313,20 +343,32 @@ function update(dt) {
     spawnT = Math.max(0.3, 0.8 - (1 - timeLeft / GAME_TIME) * 0.5);
   }
 
+  for (const k of ["double", "slow", "wide"]) effects[k] = Math.max(0, effects[k] - dt);
+  player.w = effects.wide > 0 ? 130 : 64;
+  if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
+  const fall = effects.slow > 0 ? 0.45 : 1;
+
   for (const it of items) {
-    it.y += it.vy * dt;
+    it.y += it.vy * dt * fall;
     it.rot += it.vr * dt;
     if (!it.dead && it.y > player.y - 30 && it.y < player.y + 20 && Math.abs(it.x - player.x) < player.w / 2 + 15) {
       it.dead = true;
-      if (it.bad) {
+      if (it.boost) {
+        applyBoost(it);
+      } else if (it.bad && effects.shield) {
+        effects.shield = false;
+        addPopup("🛡️ Uff, tarcza!", it.x, it.y, "#3b6fd8");
+        sfx.shield();
+      } else if (it.bad) {
         lives--;
         addPopup(`${it.label} 💥`, it.x, it.y, "#ff5c5c");
         shake = 0.3;
         sfx.hit();
         if (navigator.vibrate) navigator.vibrate(120);
       } else {
-        score += 10;
-        addPopup(`+10 ${it.label}`, it.x, it.y, "#2a8f45");
+        const pts = effects.double > 0 ? 20 : 10;
+        score += pts;
+        addPopup(`+${pts} ${it.label}`, it.x, it.y, "#2a8f45");
         sfx.catch();
       }
     }
@@ -347,7 +389,8 @@ function update(dt) {
 
   $("hScore").textContent = `Punkty: ${score}`;
   $("hTime").textContent = `⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
-  $("hLives").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(3 - Math.max(0, lives));
+  // Compact form above 3 lives so the HUD fits on narrow phones
+  $("hLives").textContent = lives > 3 ? `❤️×${lives}` : "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
 
   if (lives <= 0 || timeLeft <= 0) end(lives <= 0);
 }
@@ -367,12 +410,28 @@ function draw() {
   for (const it of items) {
     ctx.save();
     ctx.translate(it.x, it.y); ctx.rotate(it.rot * 0.3);
+    if (it.boost) {
+      // Pulsing golden glow so boosts stand out
+      const pulse = 26 + Math.sin(performance.now() / 120) * 5;
+      const g = ctx.createRadialGradient(0, 0, 4, 0, 0, pulse);
+      g.addColorStop(0, "rgba(255,230,80,0.95)"); g.addColorStop(1, "rgba(255,200,0,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, pulse, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.font = "38px serif";
     ctx.fillText(it.emoji, 0, 0);
     ctx.restore();
   }
 
-  // player
+  // player (wide boost shows the catch zone, shield shows a bubble)
+  if (effects.wide > 0) {
+    ctx.fillStyle = "rgba(255,204,51,0.45)";
+    roundRect(player.x - player.w / 2, player.y + 14, player.w, 12, 6);
+  }
+  if (effects.shield) {
+    ctx.strokeStyle = "rgba(59,111,216,0.8)"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(player.x, player.y, 40, 0, Math.PI * 2); ctx.stroke();
+  }
   ctx.font = "56px serif";
   ctx.fillText(ch.face, player.x, player.y);
   ctx.font = "bold 14px system-ui";
@@ -403,6 +462,38 @@ function draw() {
     ctx.strokeText(p.text, px, p.y);
     ctx.fillStyle = p.color;
     ctx.fillText(p.text, px, p.y);
+    ctx.globalAlpha = 1;
+  }
+
+  // active effects, top-left
+  const tags = [];
+  if (effects.double > 0) tags.push(`x2 ${Math.ceil(effects.double)}s`);
+  if (effects.slow > 0) tags.push(`🐢 ${Math.ceil(effects.slow)}s`);
+  if (effects.wide > 0) tags.push(`↔️ ${Math.ceil(effects.wide)}s`);
+  if (effects.shield) tags.push("🛡️");
+  ctx.font = "bold 16px system-ui"; ctx.textAlign = "left";
+  tags.forEach((t, i) => {
+    const tw = ctx.measureText(t).width + 16;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    roundRect(8, 8 + i * 30, tw, 26, 8);
+    ctx.fillStyle = "#ffcc33";
+    ctx.fillText(t, 16, 21 + i * 30);
+  });
+  ctx.textAlign = "center";
+
+  if (banner) {
+    ctx.globalAlpha = Math.min(1, banner.t * 2);
+    const by = H * 0.38;
+    ctx.fillStyle = "rgba(20,20,40,0.8)";
+    roundRect(12, by - 60, W - 24, 110, 16);
+    ctx.font = "48px serif";
+    ctx.fillText(banner.emoji, W / 2, by - 22);
+    let size = 22;
+    ctx.font = `bold ${size}px system-ui`;
+    const tw = ctx.measureText(banner.text).width;
+    if (tw > W - 48) { size = Math.max(12, Math.floor(size * (W - 48) / tw)); ctx.font = `bold ${size}px system-ui`; }
+    ctx.fillStyle = "#ffcc33";
+    ctx.fillText(banner.text, W / 2, by + 26);
     ctx.globalAlpha = 1;
   }
   ctx.restore();
