@@ -144,7 +144,7 @@ const CHARS = [
   },
   {
     id: "tomek", name: "Tomek", face: "🪓", desc: "Za dnia drwal, nocą szef fabryki na Słowacji. Kiedy on śpi? Nikt nie wie.",
-    sky: "#a7e39b", night: "#1d2347",
+    sky: "#a7e39b", night: "#1d2347", nightIcon: "🌙", nightText: "🌙 NOCNA ZMIANA NA SŁOWACJI!",
     good: [["🪵","Drewno na opał"],["🌲","Drzewo leży!"]],
     bad:  [["🐻","Niedźwiedź!"],["🐝","Osy w pniu"]],
     goodNight: [["⚙️","Linia chodzi"],["📦","Paleta poszła"],["💶","Nowy kontrakt!"]],
@@ -161,6 +161,18 @@ const CHARS = [
     boosts: [["💸","Podwyżka! x2 punkty","double"],["🤖","Kod pisze się sam! Spowolnienie","slow"]],
     quips: ["U mnie działa", "To nie błąd, tak miało być", "Kto mi to zepsuł?!", "Zrobię to w weekend"],
     titles: ["Junior od guzików", "Programista z ambicjami", "Krakowski senior", "Twórca Wszechświata"],
+  },
+  {
+    id: "lipnican", name: "Lipnican", face: "🤓",
+    desc: "Uważa, że Lipnica to 24. dzielnica Wiednia. Ledwo skończył podstawówkę, a zna się na wszystkim, oprócz ortografii. Bardziej austriacki niż SW.",
+    sky: "#ffd6d6", night: "#c9efb4", nightLight: true, nightIcon: "🏡", nightText: "🚗 PIĄTEK! Zjazd do Lipnicy Wielkiej!",
+    good: [["🇦🇹","Ałstria górą"],["👖","Węższe spodnie, wienksze ego"],["🧠","Znam sie na wszyskim"],["☕","Melanż w Wiedniu"]],
+    bad:  [["🚗","Audi A3 znowu zepsóte"],["📝","Dyktando!"],["🔧","Mechanik: 3 tysionce"],["🗺️","Mapa: Lipnica to Polska?!"]],
+    goodNight: [["🏡","Łikend w Lipnicy"],["🍺","Piwo pod sklepem"],["🐄","Krowy go poznały"],["🏰","Lipnica = 24 Bezirk"]],
+    badNight:  [["🚗","Audi stanęło na zakopiance"],["👵","Babcia: ubierz normalne spodnie"],["📝","Dyktando u cioci"]],
+    boosts: [["🔑","Audi odpaliło za pierwszym razem! x2 punkty","double"],["🪞","Lustro! Ego rośnie, szerszy chwyt","wide"]],
+    quips: ["Lipnica to 24 bezirk, kaszdy wie", "Ja sie na tym znam", "Audi tylko troche stuka", "SW to nie jest prawdziwy Austryjak", "Przyjade w piontek"],
+    titles: ["Absolwent podstawówki", "Ekspert od wszyskiego", "Burmistrz 24 Bezirku", "Wiedeński Arcyksiąże"],
   },
   {
     id: "scurek", name: "Scurek", face: "😎", unlockAt: 100,
@@ -202,8 +214,10 @@ const VISITS = {
   tomek:    { emoji: "🪵", kind: "bad",  text: "Tomek zrzuca kłody! Głowa w dół!" },
   dominik:  { emoji: "☕", kind: "good", text: "Dominik stawia wszystkim kawę!" },
   scurek:   { emoji: "🛵", kind: "good", text: "Scurek opycha skutery po taniości!" },
+  lipnican: { emoji: "🔩", kind: "bad",  text: "Lipnican przejechał zepsutym Audi! Lecą części!" },
 };
 const VISIT_OVERRIDES = {
+  "sw>lipnican":    { emoji: "📝", kind: "bad",  text: "Lipnican tłumaczy SW, jak się żyje w Austrii! Z błędami!" },
   "mateusz>pawel":  { emoji: "📜", kind: "bad",  text: "Paweł zasypuje cię argumentami!" },
   "sw>piotrek":     { emoji: "🧱", kind: "good", text: "Piotrek podrzuca cegły dla Strabagu!" },
   "marcin>dominik": { emoji: "☕", kind: "good", text: "Brat Dominik stawia kawę w przerwie!" },
@@ -375,7 +389,10 @@ function start(c) {
   requestAnimationFrame(loop);
 }
 
+// Second half of the game switches to the character's "night" phase (Tomek's shift, Lipnican's weekend)
 const isNight = () => ch.night && timeLeft < GAME_TIME / 2;
+// Dark phases need light text and a dark ground; nightLight phases keep daytime colors
+const isDark = () => isNight() && !ch.nightLight;
 
 function spawn() {
   const night = isNight();
@@ -459,7 +476,7 @@ function loop(now) {
 function update(dt) {
   const wasNight = isNight();
   timeLeft -= dt;
-  if (!wasNight && isNight()) { addPopup("🌙 NOCNA ZMIANA NA SŁOWACJI!", W / 2, H / 2, "#ffcc33"); sfx.night(); }
+  if (!wasNight && isNight()) { addPopup(ch.nightText, W / 2, H / 2, "#ffcc33"); sfx.night(); }
 
   if (keys.left) player.x -= player.speed * dt;
   if (keys.right) player.x += player.speed * dt;
@@ -542,10 +559,10 @@ function draw() {
   if (shake > 0) ctx.translate((Math.random() - .5) * 12, (Math.random() - .5) * 12);
   ctx.fillStyle = isNight() ? ch.night : ch.sky;
   ctx.fillRect(-10, -10, W + 20, H + 20);
-  if (isNight()) { ctx.font = "40px " + EMOJI_FONT; ctx.fillText("🌙", W - 50, 40); }
+  if (isNight()) { ctx.font = "40px " + EMOJI_FONT; ctx.fillText(ch.nightIcon, W - 50, 40); }
 
   // ground
-  ctx.fillStyle = isNight() ? "#2c3a2c" : "#6b9b4a";
+  ctx.fillStyle = isDark() ? "#2c3a2c" : "#6b9b4a";
   ctx.fillRect(-10, H - 20, W + 20, 30);
 
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -569,7 +586,7 @@ function draw() {
     ctx.font = "44px " + EMOJI_FONT;
     ctx.fillText(visit.who.face, visit.x, 78);
     ctx.font = "bold 13px system-ui";
-    ctx.fillStyle = isNight() ? "#fff" : "#222";
+    ctx.fillStyle = isDark() ? "#fff" : "#222";
     ctx.fillText(visit.who.name, visit.x, 108);
   }
 
@@ -585,7 +602,7 @@ function draw() {
   ctx.font = "56px " + EMOJI_FONT;
   ctx.fillText(ch.face, player.x, player.y);
   ctx.font = "bold 14px system-ui";
-  ctx.fillStyle = isNight() ? "#fff" : "#222";
+  ctx.fillStyle = isDark() ? "#fff" : "#222";
   ctx.fillText(ch.name, player.x, player.y + 34);
 
   // speech bubble
@@ -673,6 +690,7 @@ function end(died) {
     tomek: "Organizm w końcu upomniał się o sen.",
     dominik: "Produkcja leży. Piątek, 16:58. Klasyk.",
     scurek: "Fejk konto wyczyściło rentę. Znowu.",
+    lipnican: "Audi A3 stanęło na autostradzie. Weekend w Lipnicy odwołany.",
   };
   $("eText").textContent = died ? deathLines[ch.id] : "Przetrwałeś cały dzień. Szacun.";
   died ? sfx.lose() : sfx.win();

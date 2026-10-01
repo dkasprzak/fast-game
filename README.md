@@ -22,6 +22,7 @@ Cała gra to jeden plik `index.html`. Nie trzeba niczego instalować ani budowa�
 | ✊ **Mateusz** | Lewak pełną gębą | rower, tofu, mleko sojowe, protesty | SUV, argumenty Pawła, schabowy |
 | 🪓 **Tomek** | Za dnia drwal, nocą szef fabryki na Słowacji | drewno, a w nocy linia produkcyjna i kontrakty | niedźwiedź, osy, a w nocy awarie i drzemka na zmianie |
 | 👨‍💻 **Dominik** | Programista z Krakowa, twórca gry | kawa, zielone testy, Smok Wawelski, obwarzanek | błąd na produkcji, smog, zebranie, które mogło być mailem |
+| 🤓 **Lipnican** | Uważa, że Lipnica to 24. dzielnica Wiednia. Zna się na wszystkim oprócz ortografii, bardziej austriacki niż SW | Austria, coraz węższe spodnie (większe ego), melanż w Wiedniu, a w weekend Lipnica, piwo pod sklepem i krowy | Audi A3, które znowu się zepsuło, dyktando, rachunek od mechanika, mapa, na której Lipnica jest w Polsce |
 
 ### 🔒 Postać do odblokowania
 
@@ -31,7 +32,7 @@ Cała gra to jeden plik `index.html`. Nie trzeba niczego instalować ani budowa�
 
 Scurek odblokowuje się po zdobyciu **100 pkt dowolną postacią**. Do tego czasu w menu widać tylko kartę „🔒 ???”. Odblokowanie jest zapisywane w przeglądarce.
 
-U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. Wtedy zmieniają się też przedmioty, które spadają.
+U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. U Lipnicana w połowie gry wybija piątek i jedzie na weekend do Lipnicy Wielkiej. W obu przypadkach zmieniają się sceneria i przedmioty, które spadają. Teksty Lipnicana mają celowe błędy ortograficzne.
 
 ## Mechaniki
 
@@ -47,6 +48,7 @@ U Tomka w połowie gry zapada noc i zaczyna się nocna zmiana na Słowacji. Wted
 | Mateusz | 🗳️ Wygrane wybory (x2) · 🤝 Paweł przyznał rację (tarcza) |
 | Tomek | ☕ Podwójne espresso (spowolnienie) · 😴 Drzemka 15 minut (+1 życie) |
 | Dominik | 💸 Podwyżka (x2) · 🤖 Kod pisze się sam (spowolnienie) |
+| Lipnican | 🔑 Audi odpaliło za pierwszym razem (x2) · 🪞 Lustro, ego rośnie (szerszy chwyt) |
 | Scurek | 💌 Prawdziwa laska odpisała (x2) · 📮 Waloryzacja renty (+100 pkt) |
 
 - **x2 punkty, spowolnienie i szerszy chwyt** działają przez 7 sekund.
@@ -63,8 +65,8 @@ Co kilkanaście sekund przez planszę przelatuje losowy inny kumpel i coś zrzuc
 
 Pozostali goście:
 - **pomaga:** SW rozdaje kaski, Marcin przemyca kabanosy, Dominik stawia kawę, a Scurek (po odblokowaniu) opycha skutery po taniości;
-- **szkodzi:** Piotrek rzuca cegłami, Tomek zrzuca kłody;
-- **rywale:** u Mateusza Paweł zasypuje go argumentami;
+- **szkodzi:** Piotrek rzuca cegłami, Tomek zrzuca kłody, Lipnican przejeżdża zepsutym Audi i lecą z niego części;
+- **rywale:** u Mateusza Paweł zasypuje go argumentami, a u SW Lipnican tłumaczy, jak się żyje w Austrii (z błędami);
 - **bracia** (Marcin, Dominik i Paweł) zawsze sobie pomagają.
 
 ### 🏆 Tytuły, wyniki i chwalenie się
